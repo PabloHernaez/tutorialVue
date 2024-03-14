@@ -1,8 +1,10 @@
 <script>
 // Importacion del componente "TablaPersonas"
 import TablaPersonas from "@/components/TablaPersonas.vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import FormularioPersona from "./components/FormularioPersona.vue";
+
+import { useCounterStore } from "@/stores/counter";
 // Definicion del componente principal
 export default {
   // Nombre del componente principal
@@ -14,63 +16,85 @@ export default {
   },
 
   setup() {
-    const personas = ref([
-      {
-        id: 1,
-        nombre: "Jon",
-        apellido: "Nieve",
-        email: "jon@email.com",
-      },
-      {
-        id: 2,
-        nombre: "Tyrion",
-        apellido: "Lannister",
-        email: "tyrion@email.com",
-      },
-      {
-        id: 3,
-        nombre: "Daenerys",
-        apellido: "Targaryen",
-        email: "daenerys@email.com",
-      },
-    ]);
+    const personas = ref([]);
+    const store = useCounterStore();
 
-    const actualizarPersona = (id, personaActualizada) => {
+    const url = import.meta.env.VITE_DJANGOURL;
+
+    const listadoPersonas = async () => {
       try {
-        personas.value = personas.value.map((persona) =>
-          persona.id === id ? personaActualizada : persona
+        const response = await fetch(url + "api/v1/personas/");
+        var value = await response.json();
+        personas.value = value;
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    const actualizarPersona = async (id, personaActualizada) => {
+      try {
+        const response = await fetch(
+          url + "api/v1/personas/" + personaActualizada.id + "/",
+          {
+            method: "PUT",
+            body: JSON.stringify(personaActualizada),
+            headers: { "Content-type": "application/json; charset=UTF-8" },
+          }
+        );
+        const personaActualizadaJS = await response.json();
+        personas.value = personas.value.map((u) =>
+          u.id === personaActualizada.id ? personaActualizadaJS : u
         );
       } catch (error) {
         console.error(error);
       }
     };
 
-    const agregarPersona = (persona) => {
-      let id = 0;
-      if (personas.value.length > 0) {
-        id = personas.value[personas.value.length - 1].id + 1;
-      }
-      personas.value = [...personas.value, { ...persona, id }];
-    };
-
-    const eliminarPersona = (id) => {
+    const agregarPersona = async (persona) => {
       try {
-        personas.value = personas.value.filter((u) => u.id !== id);
+        var json = JSON.stringify(persona);
+
+        const response = await fetch(url + "api/v1/personas/", {
+          method: "POST",
+          body: JSON.stringify(persona),
+          headers: { "Content-type": "application/json; charset=UTF-8" },
+        });
+        const personaCreada = await response.json();
+        personas.value = [...personas.value, personaCreada];
+        store.increment();
       } catch (error) {
         console.error(error);
       }
     };
 
-    return { personas, agregarPersona, eliminarPersona, actualizarPersona };
+    const eliminarPersona = async (id) => {
+      try {
+        await fetch(url + "api/v1/personas/" + persona_id + "/", {
+          method: "DELETE",
+        });
+        personas.value = personas.value.filter((u) => u.id !== persona_id);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    onMounted(() => {
+      listadoPersonas();
+    });
+    return {
+      personas,
+      agregarPersona,
+      eliminarPersona,
+      actualizarPersona,
+      store,
+    };
   },
 };
 </script>
 
 <template>
-  <div
-    id="app"
-    class="container"
-  >
+  <div id="app" class="container">
+    <p>Count is {{ store.count }}</p>
     <div class="row">
       <div class="col-md-12">
         <h1>Personas</h1>
@@ -82,8 +106,7 @@ export default {
         <tabla-personas
           :personas="personas"
           @delete-persona="eliminarPersona"
-          @actualizar-persona="actualizarPersona"
-        />
+          @actualizar-persona="actualizarPersona" />
       </div>
     </div>
   </div>
