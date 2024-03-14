@@ -23,9 +23,7 @@ export default {
 
     const listadoPersonas = async () => {
       try {
-        const response = await fetch(
-          "https://psi-deploy.onrender.com/api/v1/personas/"
-        );
+        const response = await fetch(url + "api/v1/personas/");
         var value = await response.json();
         personas.value = value;
       } catch (error) {
@@ -36,9 +34,7 @@ export default {
     const actualizarPersona = async (id, personaActualizada) => {
       try {
         const response = await fetch(
-          "https://psi-deploy.onrender.com/api/v1/personas/" +
-            personaActualizada.id +
-            "/",
+          url + "api/v1/personas/" + personaActualizada.id + "/",
           {
             method: "PUT",
             body: JSON.stringify(personaActualizada),
@@ -58,14 +54,11 @@ export default {
       try {
         var json = JSON.stringify(persona);
 
-        const response = await fetch(
-          "https://psi-deploy.onrender.com/api/v1/personas/",
-          {
-            method: "POST",
-            body: JSON.stringify(persona),
-            headers: { "Content-type": "application/json; charset=UTF-8" },
-          }
-        );
+        const response = await fetch(url + "api/v1/personas/", {
+          method: "POST",
+          body: JSON.stringify(persona),
+          headers: { "Content-type": "application/json; charset=UTF-8" },
+        });
         const personaCreada = await response.json();
         personas.value = [...personas.value, personaCreada];
         store.increment();
@@ -76,13 +69,10 @@ export default {
 
     const eliminarPersona = async (id) => {
       try {
-        await fetch(
-          "https://psi-deploy.onrender.com/api/v1/personas/" + persona_id + "/",
-          {
-            method: "DELETE",
-          }
-        );
-        personas.value = personas.value.filter((u) => u.id !== persona_id);
+        await fetch(url + "api/v1/personas/" + id + "/", {
+          method: "DELETE",
+        });
+        personas.value = personas.value.filter((u) => u.id !== id);
       } catch (error) {
         console.error(error);
       }
